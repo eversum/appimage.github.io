@@ -48,6 +48,18 @@ if [ x"${URL:0:22}" == x"https://api.github.com" ] || [ x"${GHURL:0:22}" == x"ht
   LICENSE=$(echo "$API_JSON" | grep spdx_id | cut -d '"' -f 4 | head -n 1)
 fi
 
+# Handle GitLab URLs
+if [ x"${URL:0:18}" == x"https://gitlab.com" ]; then
+  echo "GitLab URL detected"
+  GLUSER=$(echo "$URL" | cut -d '/' -f 4)
+  GLREPO=$(echo "$URL" | cut -d '/' -f 5)
+  GLURL="https://gitlab.com/$GLUSER/$GLREPO/-/releases"
+  echo "URL from GitLab: $URL"
+  echo "GitLab releases URL: $GLURL"
+  echo "GitLab user: $GLUSER"
+  echo "GitLab repo: $GLREPO"
+fi
+
 # Download the file if it is not already there
 # This may get replaced by mounting the file with fuse httpfs
 # if we find an implementation that supports https
@@ -494,6 +506,9 @@ sudo chmod a+x appstreamcli-x86_64.AppImage
   if [  x"$GH_USER" != x"" ] ; then
     echo "  - name: $GH_USER" >> apps/$INPUTBASENAME.md
     echo "    url: https://github.com/$GH_USER" >> apps/$INPUTBASENAME.md
+  elif [  x"$GLUSER" != x"" ] ; then
+    echo "  - name: $GLUSER" >> apps/$INPUTBASENAME.md
+    echo "    url: https://gitlab.com/$GLUSER" >> apps/$INPUTBASENAME.md
   elif [  x"$OBS_USER" != x"" ] ; then
     echo "  - name: $OBS_USER" >> apps/$INPUTBASENAME.md
     echo "    url: https://build.opensuse.org/user/show/$OBS_USER" >> apps/$INPUTBASENAME.md
@@ -509,6 +524,11 @@ sudo chmod a+x appstreamcli-x86_64.AppImage
     echo "    url: $GH_USER/$GH_REPO" >> apps/$INPUTBASENAME.md
     echo "  - type: Download" >> apps/$INPUTBASENAME.md
     echo "    url: https://github.com/$GH_USER/$GH_REPO/releases" >> apps/$INPUTBASENAME.md
+  elif [  x"$GLUSER" != x"" ] ; then
+    echo "  - type: GitLab" >> apps/$INPUTBASENAME.md
+    echo "    url: $GLUSER/$GLREPO" >> apps/$INPUTBASENAME.md
+    echo "  - type: Download" >> apps/$INPUTBASENAME.md
+    echo "    url: $GLURL" >> apps/$INPUTBASENAME.md
   fi
   OBS_LINK=$(grep "^http.*://download.opensuse.org.*latest.*AppImage$" data/$INPUTBASENAME | sed -e 's|http://d|https://d|g')
   if [  x"$OBS_LINK" != x"" ] ; then
